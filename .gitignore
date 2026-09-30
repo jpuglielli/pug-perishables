@@ -1,0 +1,3 @@
+.cursor/
+bash/artifacts/*
+!bash/artifacts/.gitkeep

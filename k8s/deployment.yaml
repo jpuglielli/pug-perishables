@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0-standalone-strict/deployment-apps-v1.json
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: "pug-pods"
