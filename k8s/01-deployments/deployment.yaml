@@ -1,0 +1,32 @@
+version: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  # How many pods to run, how to find them
+  # Required
+  selector:
+    matchLabels:
+      # .spec.selector must match .spec.template.metadata.labels, or it will be rejected by the API.
+      app: nginx
+  replicas: 3
+  # Required
+  # Pod template, exactly the same schema as a Pod, except it is nested and does not have an apiVersion or kind.
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # What a single pod will look like
+      containers:
+        - name: web
+          image: nginx:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 80
