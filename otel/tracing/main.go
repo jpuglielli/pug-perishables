@@ -32,6 +32,8 @@ func newTracerProvider(ctx context.Context) (*sdktrace.TracerProvider, error) {
 		// Gives all defaults, but gets overridden with custom attrs
 		// resource.Merge(a, b), when both resources set the same key, b's value wins
 		resource.Default(),
+		// semconv are standard attr names (service.name, http.request.method)
+		// names change between versions: http.method was renamed to http.request.method, without version tag backend can't tell if they mean same thing
 		resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceName("pug-api")),
 	)
 
