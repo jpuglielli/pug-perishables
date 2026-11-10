@@ -1,4 +1,4 @@
-module github.com/jpuglielli/pug-perishables/otel/tracing
+module github.com/jpuglielli/pug-perishables/otel
 
 go 1.27.1
 

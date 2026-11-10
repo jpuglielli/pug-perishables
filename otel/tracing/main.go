@@ -3,56 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.43.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/jpuglielli/pug-perishables/otel/telemetry"
 )
 
 // Module level, concurrency safe
 var tracer trace.Tracer
 
-// Send data to the otel collector
-func newExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
-	// some exporter, how the telemetry is set out
-	return stdouttrace.New(stdouttrace.WithPrettyPrint())
-}
-
-func newTracerProvider(ctx context.Context) (*sdktrace.TracerProvider, error) {
-	// Set of attrs describing the entity that produces the telemetry (e.g. service, host, pod)
-	// Set once per provider, describes who emitted the data
-	// Applies to metrics and logs
-	// Backends lean on service.name a lot
-	r, err := resource.Merge(
-		// Gives all defaults, but gets overridden with custom attrs
-		// resource.Merge(a, b), when both resources set the same key, b's value wins
-		resource.Default(),
-		// semconv are standard attr names (service.name, http.request.method)
-		// names change between versions: http.method was renamed to http.request.method, without version tag backend can't tell if they mean same thing
-		resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceName("pug-api")),
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	exp, _ := newExporter(ctx)
-
-	return sdktrace.NewTracerProvider(
-		sdktrace.WithResource(r),
-		sdktrace.WithSyncer(exp),
-	), nil
-}
-
 func main() {
 	ctx := context.Background()
 
-	provider, _ := newTracerProvider(ctx)
+	provider, err := telemetry.NewTracerProvider(ctx, "pug-api")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Otel package is global registry, set things once at startup,
 	// any code in process can read it back
@@ -60,13 +30,7 @@ func main() {
 	// Each setter has a getter
 	otel.SetTracerProvider(provider)
 	// tp := otel.GetTracerProvider()
-	otel.SetTextMapPropagator(
-		// propagates traceparent and tracestate
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{},
-			propagation.Baggage{},
-		),
-	)
+	telemetry.SetupPropagators()
 
 	tmp := otel.GetTextMapPropagator()
 
